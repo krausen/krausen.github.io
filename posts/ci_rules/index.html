@@ -10,11 +10,9 @@
 <link rel=stylesheet href=https://krausen.github.io/css/main.min.4a7ec8660f9a44b08c4da97c5f2e31b1192df1d4d0322e65c0dbbc6ecb1b863f.css>
 <meta name=twitter:card content="summary">
 <meta name=twitter:title content="Simple rules for CI">
-<meta name=twitter:description content="Don&rsquo;t branch (or at least keep them short lived) The goal of Continuous Integration is to integrate often. Long lived branches work against this goal and should be avoided. As a rule of thumb you should strive to at least have you changes pushed to the remote master before the end of your work day.
-Have a fast test suite Have a lightning fast test suite, a couple of minutes at the most.">
+<meta name=twitter:description content="I like the concept of Simple rules. Basically they are 3-5 simple rules on how to deal with a complex problem. This is not magic number but keeping it in that range makes them easy to remember and the constraint forces you to think about the essential and most important rules. They should be followed as a guideline when making decisions rather than followed as an algorithm. In my experience they work well in sticking to a strategy or way of working in a team.">
 <meta property="og:title" content="Simple rules for CI">
-<meta property="og:description" content="Don&rsquo;t branch (or at least keep them short lived) The goal of Continuous Integration is to integrate often. Long lived branches work against this goal and should be avoided. As a rule of thumb you should strive to at least have you changes pushed to the remote master before the end of your work day.
-Have a fast test suite Have a lightning fast test suite, a couple of minutes at the most.">
+<meta property="og:description" content="I like the concept of Simple rules. Basically they are 3-5 simple rules on how to deal with a complex problem. This is not magic number but keeping it in that range makes them easy to remember and the constraint forces you to think about the essential and most important rules. They should be followed as a guideline when making decisions rather than followed as an algorithm. In my experience they work well in sticking to a strategy or way of working in a team.">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://krausen.github.io/posts/ci_rules/"><meta property="article:section" content="posts">
 <meta property="article:published_time" content="2021-08-08T15:02:58+02:00">
@@ -44,13 +42,15 @@ Have a fast test suite Have a lightning fast test suite, a couple of minutes at 
 Aug 8, 2021
 </div>
 <div><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-clock"><title>clock</title><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-2 min read
+3 min read
 </div>
 </div>
 </header>
 <div class=post-content>
+<p>I like the concept of <a href="https://www.youtube.com/watch?v=BgD3V-IyVT4">Simple rules</a>. Basically they are 3-5 simple rules on how to deal with a complex problem.
+This is not magic number but keeping it in that range makes them easy to remember and the constraint forces you to think about the essential and most important rules. They should be followed as a guideline when making decisions rather than followed as an algorithm. In my experience they work well in sticking to a strategy or way of working in a team. Keep them explicitly written down and update them when you learn better ways of dealing with the problem. To demonstrate this I decided share my simple rules for Continuous Integration.</p>
 <h4 id=dont-branch-or-at-least-keep-them-short-lived>Don&rsquo;t branch (or at least keep them short lived)</h4>
-<p>The goal of Continuous Integration is to integrate often. Long lived branches work against this goal and should be avoided. As a rule of thumb you should strive to at least have you changes pushed to the remote master before the end of your work day.</p>
+<p>The goal of CI is to integrate often. Long lived branches work against this goal and should be avoided. As a rule of thumb you should strive to at least have you changes on the remote master before the end of your work day.</p>
 <h4 id=have-a-fast-test-suite>Have a fast test suite</h4>
 <p>Have a lightning fast test suite, a couple of minutes at the most. The CI is there to help you and your team to stay efficient, no one has the time to wait around for a slow test suite. Fail fast, if a single test case fails it should be enough fail the entire test suite. If you have different types of tests (Unit, component, system etc) run the fastest first. We want feedback as fast as possible!</p>
 <h4 id=the-committer-is-responsible-to-fix-failed-builds>The committer is responsible to fix failed builds</h4>
