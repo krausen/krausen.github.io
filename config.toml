@@ -1,0 +1,30 @@
+baseURL = "https://krausen.github.io"
+languageCode = "en-us"
+title = "Niclas Krause"
+theme = "m10c"
+
+[menu]
+   [[menu.main]]
+    identifier = "about"
+    name = "About"
+    url = "/about"
+    weight = 1
+   [[menu.main]]
+    identifier = "home"
+    name = "Home"
+    url = "/"
+    weight = 1
+
+[params]
+   author = "Niclas Krause"
+   avatar = "/images/niclas.jpeg" 
+   description = "Software developer based in Stockholm, Sweden"
+
+[[params.social]]
+  icon = "github"
+  name = "My Github"
+  url = "https://github.com/krausen"
+
+[taxonomies]
+   tag = "tags"
+   category = "categories"
