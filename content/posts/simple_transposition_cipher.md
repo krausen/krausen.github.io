@@ -1,0 +1,60 @@
+---
+title: "Symmetric encryption by hand"
+date: 2021-08-11T09:49:40+02:00
+draft: false
+---
+
+### Secure your message
+
+I recently stumbled upon a way of encrypting messages that is clever and simple to do yourself.
+All you need is a pen and a paper. Optionally have a friend that can receive and decrypt your message, this makes it a lot more fun!
+The method is called Columnar Transposition. A variant of it, the [Double Transposition Cipher](https://en.wikipedia.org/wiki/Transposition_cipher#Double_transposition) have been used as method for securing messages in the World War I & II.
+
+
+I will demonstrate with an example. Say that you want to tell your partner where you buried your treasure. 
+
+> **THE TREASURE IS BURIED BY THE TREE AT THE END OF THE ROAD**
+
+The message has 45 character so we create a matrix that can fit all characters. Then we fill in the message from left to right, beginning on a new row when the current one is full. In this example I have done it with a 5x9 matrix:
+
+||||||||||
+|-|-|-|-|-|-|-|-|-|
+|T|H|E|T|R|E|A|S|U|
+|R|E|I|S|B|U|R|I|E|
+|D|B|Y|T|H|E|T|R|E|
+|E|A|T|T|H|E|E|N|D|
+|O|F|T|H|E|R|O|A|D|
+
+
+Next up we select the encryption key, it should be a word that is of equal length to the number of columns. Letter by letter we type down it's position in the alphabet relative to the others. We want to end up with a string of integers in the range from 1 to number of columns.
+
+> Keyword: **STINKPOTS**
+
+> Key:     **681325497**
+
+As you can see some letters occur more than once. Relative to the other letters S is in position 6 of the alphabet, so the first occurrence will be mapped to 6. The second occurrence of S will be treated as if it as subsequent letter to the first S and will map to 7. With our key we can now use it to label the columns:
+
+|6|8|1|3|2|5|4|9|7|
+|-|-|-|-|-|-|-|-|-|
+|T|H|E|T|R|E|A|S|U|
+|R|E|I|S|B|U|R|I|E|
+|D|B|Y|T|H|E|T|R|E|
+|E|A|T|T|H|E|E|N|D|
+|O|F|T|H|E|R|O|A|D|
+
+In order of the labeled columns, assemble the encrypted message:
+
+> **EIYTT RBHHE TSTTH ARTEO EUEER TRDEO UEEDD HEBAF SIRNA**
+
+This is a symmetric way of encryption. Given that your friend have access to the keyword he/she is able to decrypt your message!
+You can transpose this message once more with the same or a new key to strengthen the encryption. This makes it a Double Transposition Cipher mentioned in the beginning.
+
+### Try it out
+This is a message to you :)
+> Message: **WD,EE LEVE LNAB! EOHAR**
+
+> Keyword: **BOLD**
+
+
+
+Cheers! 🍺
