@@ -15,3 +15,5 @@ EE
 LEVE
 LNAB
 EOHAR
+Niclas
+Krause
