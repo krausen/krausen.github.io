@@ -12,4 +12,4 @@ Why?
 
 **Learning** Writing about what you learn is one of the best way to test how well you have understood a topic. Your knowledge gaps will get painfully clear when to are trying to formulate an idea in written text. This gives you an opportunity to fill them and progress your learning. Describing an idea in your own words help me to internalize the learning. Making it my own in a way.
 
-**Sharing** Most of what you will find here are not my original ideas. I simply gather awesome ideas from others, hopefully others find them useful as well.
+**Sharing** Much of what you will find here are not my original ideas. I gather awesome ideas from others, in sharing them I hope that others will find them useful as well.
