@@ -17,3 +17,13 @@ LNAB
 EOHAR
 Niclas
 Krause
+Nginx
+GKE
+DNS
+SSL
+ConfigMap
+HTTPS
+Kubernetes
+LoadBalancer
+TCP
+VPC
