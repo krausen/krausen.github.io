@@ -10,11 +10,11 @@
 <link rel=stylesheet href=https://krausen.github.io/css/main.min.4a7ec8660f9a44b08c4da97c5f2e31b1192df1d4d0322e65c0dbbc6ecb1b863f.css>
 <meta name=twitter:card content="summary">
 <meta name=twitter:title content="How to setup Nginx as a reverse proxy in GKE">
-<meta name=twitter:description content="Before diving in to the specifics of how to set it up in GKE, let&rsquo;s understand what it is we want to achieve and what a reverse proxy is. Put simply, a reverse proxy is a server that redirects clients to the appropriate backend server. The reason for using such an approach are many and here are some:
- Obscure the internal architecture of your backend One DNS record, access all you services from a common URL Load balance by distributing requests to you backend servers Protect against denial of service attacks by enforcing rate limits to your clients SSL encryption can be handled here and ease the load of the application servers  Configure the Nginx First of all we need a configuration for the Nginx that we want to deploy.">
+<meta name=twitter:description content="Before diving in to the specifics of how to set it up in GKE, let&rsquo;s understand what it is we want to achieve and what a reverse proxy is. Put simply, a reverse proxy is a server that redirects clients to the appropriate back end server. The reason for using such an approach are many and here are some:
+ Obscure the internal architecture of your back end One DNS record, access all you services from a common URL Load balance by distributing requests to you back end servers Protect against denial of service attacks by enforcing rate limits to your clients SSL encryption can be handled here and ease the load of the application servers  Configure the Nginx First of all we need a configuration for the Nginx that we want to deploy.">
 <meta property="og:title" content="How to setup Nginx as a reverse proxy in GKE">
-<meta property="og:description" content="Before diving in to the specifics of how to set it up in GKE, let&rsquo;s understand what it is we want to achieve and what a reverse proxy is. Put simply, a reverse proxy is a server that redirects clients to the appropriate backend server. The reason for using such an approach are many and here are some:
- Obscure the internal architecture of your backend One DNS record, access all you services from a common URL Load balance by distributing requests to you backend servers Protect against denial of service attacks by enforcing rate limits to your clients SSL encryption can be handled here and ease the load of the application servers  Configure the Nginx First of all we need a configuration for the Nginx that we want to deploy.">
+<meta property="og:description" content="Before diving in to the specifics of how to set it up in GKE, let&rsquo;s understand what it is we want to achieve and what a reverse proxy is. Put simply, a reverse proxy is a server that redirects clients to the appropriate back end server. The reason for using such an approach are many and here are some:
+ Obscure the internal architecture of your back end One DNS record, access all you services from a common URL Load balance by distributing requests to you back end servers Protect against denial of service attacks by enforcing rate limits to your clients SSL encryption can be handled here and ease the load of the application servers  Configure the Nginx First of all we need a configuration for the Nginx that we want to deploy.">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://krausen.github.io/posts/reverse_proxy_gke/"><meta property="article:section" content="posts">
 <meta property="article:published_time" content="2021-09-10T15:54:04+02:00">
@@ -49,16 +49,16 @@ Sep 10, 2021
 </div>
 </header>
 <div class=post-content>
-<p>Before diving in to the specifics of how to set it up in GKE, let&rsquo;s understand what it is we want to achieve and what a reverse proxy is. Put simply, a reverse proxy is a server that redirects clients to the appropriate backend server. The reason for using such an approach are many and here are some:</p>
+<p>Before diving in to the specifics of how to set it up in GKE, let&rsquo;s understand what it is we want to achieve and what a reverse proxy is. Put simply, a reverse proxy is a server that redirects clients to the appropriate back end server. The reason for using such an approach are many and here are some:</p>
 <ul>
-<li><strong>Obscure</strong> the internal architecture of your backend</li>
+<li><strong>Obscure</strong> the internal architecture of your back end</li>
 <li><strong>One DNS record</strong>, access all you services from a common URL</li>
-<li><strong>Load balance</strong> by distributing requests to you backend servers</li>
+<li><strong>Load balance</strong> by distributing requests to you back end servers</li>
 <li><strong>Protect</strong> against denial of service attacks by enforcing rate limits to your clients</li>
 <li><strong>SSL</strong> encryption can be handled here and ease the load of the application servers</li>
 </ul>
 <h2 id=configure-the-nginx>Configure the Nginx</h2>
-<p>First of all we need a configuration for the Nginx that we want to deploy. This is done with the ConfigMap resource, this will allow you to mount the content as a file in the container. Since the proxy will be reachable on the internet we want to encrypt the traffic and only allow HTTPS. In this example we have two services, A and B that are running as separate service in our Kubernetes cluster. To enable the nginx to resolve host names inside the cluster we need to point it towards the internal DNS <code>kube-dns.kube-system.svc.cluster.local</code> .</p>
+<p>First of all we need a configuration for the Nginx that we want to deploy. This is done with the ConfigMap resource, this will allow you to mount the content as a file in the container. Since the proxy will be reachable on the internet we want to encrypt the traffic and only allow HTTPS. In this example we have two services, A and B that are running as separate service in our Kubernetes cluster. To enable the Nginx to resolve host names inside the cluster we need to point it towards the internal DNS <code>kube-dns.kube-system.svc.cluster.local</code> .</p>
 <div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml>---
 <span style=color:#f92672>apiVersion</span>: <span style=color:#ae81ff>v1</span>
 <span style=color:#f92672>kind</span>: <span style=color:#ae81ff>ConfigMap</span>
@@ -164,7 +164,7 @@ Sep 10, 2021
   - <span style=color:#f92672>protocol</span>: <span style=color:#ae81ff>TCP</span>
     <span style=color:#f92672>port</span>: <span style=color:#ae81ff>443</span>
     <span style=color:#f92672>targetPort</span>: <span style=color:#ae81ff>8443</span>
-</code></pre></div><p>The IP address of the LoadBalanceris created automatically as an ephemeral address. To make sure that it stays static we need to navigate in the console to <strong>VPC Networks > External IP addresses.</strong> To the far right of the IP address row you will find the button <strong>Reserve</strong> that will make the address static. Take note of the IP address and update your DNS records.</p>
+</code></pre></div><p>The IP address of the LoadBalancer is created automatically as an ephemeral address. To make sure that it stays static we need to navigate in the console to <strong>VPC Networks > External IP addresses.</strong> To the far right of the IP address row you will find the button <strong>Reserve</strong> that will make the address static. Take note of the IP address and update your DNS records.</p>
 <div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>kubectl create secret tls reverse-proxy-cert --cert<span style=color:#f92672>=</span>./&lt;DOMAIN NAME&gt;.crt --key<span style=color:#f92672>=</span>./&lt;DOMAIN NAME&gt;.key --namespace<span style=color:#f92672>=</span>default
 </code></pre></div>
 </div>
