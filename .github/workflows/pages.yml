@@ -19,7 +19,7 @@ jobs:
         run: sudo apt-get install aspell
 
       - name: Spellcheck posts
-        run: ./spellcheck.sh
+        run: sudo ./spellcheck.sh
 
       - name: Setup Hugo
         uses: peaceiris/actions-hugo@v2
