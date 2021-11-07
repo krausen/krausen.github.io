@@ -1,7 +1,7 @@
 ---
 title: "Deauthentication attack against WiFi"
 date: 2021-11-07T15:18:06+01:00
-draft: true
+draft: false
 ---
 
 A while ago I learned about deauthentication attacks on WiFi access points (AP). Simply put you should be able to perform a DoS attack on a WiFi without having to authenticate to it.
