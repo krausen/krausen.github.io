@@ -1,5 +1,14 @@
+AccessPoint
 ARTEO
+dataclass
+deauth
+Deauth
+deauthenticate
+deauthentication
+Deauthentication
 decrypt
+dev
+DoS
 EE
 EIYTT
 EOHAR
@@ -38,7 +47,9 @@ namespace
 nginx
 Nginx
 readOnly
+Scapy
 secretName
+ssid
 ssl
 SSL
 svc
@@ -50,4 +61,3 @@ volumeMounts
 VPC
 yaml
 yml
-dev
